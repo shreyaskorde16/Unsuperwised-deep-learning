@@ -1,0 +1,75 @@
+TODO:
+What is the architecture of the above defined network?
+
+How many classes does the training set have?
+
+Build a convolutional neural network (Network_1) by replacing fc1 and fc2 layers in above defined network with convolutional layers of different kernel sizes and strides. Finally, add a max pooling operation after both convolutional layers.
+
+Build a convolutional neural network(Network_2) by replacing max pooling operation with average pooling in Network_1 after both convolutional layers.
+
+Train the both convolutional neural networks (Network_1 & Network_2). Plot the loss curves.
+
+Test the convolutional neural networks(Network_1 & Network_2) and calculate the test classification accuracy of both networks and compare with the defined network
+
+Note: Train the networks for atleast 100 epochs
+***********************************************************************************************
+model3 = nn.Sequential(
+    nn.Conv2d(1, 6, 5, padding=2), #input shape(1,28,28)
+    nn.ReLU(),
+    nn.MaxPool2d(2, stride=2),    #output shape(6, 14,14)
+
+    nn.Conv2d(6, 16, 5, padding=0),  #input shape = (6,14,14)
+    nn.ReLU(),
+    nn.MaxPool2d(2, stride=2),    # output shaep = (16,5,5 )    16*5*5=400
+ 
+    nn.Flatten(),
+    nn.Linear(400, 120),
+    nn.Linear(120, 84),
+    nn.Linear(84, 10)
+)
+
+def validate(model, data):
+    total = 0
+    correct = 0
+    for i, (images,labels) in enumerate(data):
+        x = model(images)
+        value, pred = torch.max(x,1)
+        pred = pred.data
+
+        total += x.size(0)
+        correct += torch.sum(pred== labels)
+    return correct*100./total
+
+****************************************************************************************
+
+# Create the network, define the criterion and optimizer
+from torch import optim
+
+
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# TODO: Train the network here
+epochs = 10
+accuracies = []
+losses = []
+for j in range(epochs):
+    print ('epoch:',j)
+    running_loss = 0
+    for i, (imagess, labelss) in enumerate(trainloader):
+        #images = images.view(images.shape[0], -1)   # The images are first flattened into a vector using view, 
+        train_img = imagess
+        train_label = labelss
+        optimizer.zero_grad()   # set all the gradients back to zero
+        output = model3(train_img)
+        loss = criterion(output,train_label)   # losss
+        loss.backward()           # calculate the gradients
+        optimizer.step()          # update the weights
+        running_loss += loss.item()
+        accuracy = float(validate(model3, testloader))
+    else:
+        print('accuracy = ',accuracy)
+        print(f"Epoch {j}, Training loss: {running_loss/len(trainloader)}")
+        cse = running_loss/len(trainloader)
+        losses.append(cse)
+#Plot the training loss curve
